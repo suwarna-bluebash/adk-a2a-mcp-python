@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "adk-working"
+version = "0.1.0"
+description = "adk fundtioning how a2a, mcp, agent work in collaboration"
+authors = ["Suhukla"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+google-adk = "^1.2.1"
+a2a-sdk = "^0.2.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

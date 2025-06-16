@@ -1,0 +1,29 @@
+adk-working-py3.10bluebash@bluebash-ThinkPad-E14-Gen-3:~/Documents/adk_demo$ cd agent-development-kit-crash-course
+adk-working-py3.10bluebash@bluebash-ThinkPad-E14-Gen-3:~/Documents/adk_demo/agent-development-kit-crash-course$ cd 1-basic-agent
+adk-working-py3.10bluebash@bluebash-ThinkPad-E14-Gen-3:~/Documents/adk_demo/agent-development-kit-crash-course/1-basic-agent$ python3 agent.py
+python3: can't open file '/home/bluebash/Documents/adk_demo/agent-development-kit-crash-course/1-basic-agent/agent.py': [Errno 2] No such file or directory
+adk-working-py3.10bluebash@bluebash-ThinkPad-E14-Gen-3:~/Documents/adk_demo/agent-development-kit-crash-course/1-basic-agent$ adk
+Usage: adk [OPTIONS] COMMAND [ARGS]...
+
+  Agent Development Kit CLI tools.
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  api_server  Starts a FastAPI server for agents.
+  create      Creates a new app in the current folder with prepopulated agent template.
+  deploy      Deploys agent to hosted environments.
+  eval        Evaluates an agent given the eval sets.
+  run         Runs an interactive CLI for a certain agent.
+  web         Starts a FastAPI server with Web UI for agents.
+adk-working-py3.10bluebash@bluebash-ThinkPad-E14-Gen-3:~/Documents/adk_demo/agent-development-kit-crash-course/1-basic-agent$ adk web
+INFO:     Started server process [17277]
+INFO:     Waiting for application startup.
+
++-----------------------------------------------------------------------------+
+| ADK Web Server started                                                      |
+|                                                                             |
+| For local testing, access at http://localhost:8000.                         |
++-----------------------------------------------------------------------------+
