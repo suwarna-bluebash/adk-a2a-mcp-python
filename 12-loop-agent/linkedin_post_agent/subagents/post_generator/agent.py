@@ -51,7 +51,3 @@ initial_post_generator = LlmAgent(
     description="Generates the initial LinkedIn post to start the refinement process",
     output_key="current_post",
 )
-
-
-import google.adk
-import a2a.utils
