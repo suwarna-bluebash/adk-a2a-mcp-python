@@ -302,15 +302,158 @@ File Name = task-2-OOPs.py
 =============================================================================================================
 '''
 #META PROGRAMMING:
-"""
-Metaprogramming is writing programs that can:
-Create,
-Modify,
-Inspect,
-Or extend other code (including functions, classes, or modules) at runtime.
+
+# Metaprogramming is writing programs that can:
+# Create,
+# Modify,
+# Inspect,
+# Or extend other code (including functions, classes, or modules) at runtime.
+
+# TYPE-1: DECORATOR BASED METAPROGRAMMING:
+# def logger(func):
+#     def wrapper(*args, **kwargs):
+#         print(f"Calling {func.__name__} with {args} and {kwargs}")
+#         result = func(*args, **kwargs)
+#         print(f"{func.__name__} returned {result}")
+#         return result
+#     return wrapper
+
+# @logger
+# def add(x, y):
+#     return x + y # NOW THIS WILL WORK ACCORDING TO LOGGER DECORATOR
+
+# >>> add(2, 3)
+# Calling add with (2, 3) and {}
+# add returned 5
+# 5
 
 
-"""
+
+#TYPE-2: CLASS CREATION WITH type()
+# This type() function is used to check the type of the object but it is also a metaclass and used to 
+# create a class  without using the keyword class and used for metaprogramming, auto-registoring and tool calling in AI.
+# type(class_name, bases, dict)--------> bases== is the parent class it inherits if it
+
+# >>> def say_hello(self):
+# ...     print(f"Hello from {self.name}!")
+# ... 
+# >>> # Creating class dynamically
+# >>> Person = type('Person', (object,), {
+# ...     'name': 'Swarna',#---------------------> this is the class variable 
+# ...     'say_hello': say_hello #------------------> this is the function similarly you can make the constructors too.
+# ... })
+# >>> 
+# >>> p = Person()
+# >>> p.say_hello()  # Output: Hello from Swarna!
+# Hello from Swarna!
+# >>> 
+#
+# MANY MORE WAYS TO USE type() FUNCTION.
+
+
+# METACLASS:
+
+# __new__ → Used to modify class attributes before the class is created.
+# __init__ → Used after the class is created, useful for class registration.
+
+# class Meta(type):
+#     def __new__(cls, name, bases, dct):
+#         print(f"Creating class: {name}")
+#         print(f"Bases: {bases}")
+#         print(f"Attributes: {list(dct.keys())}")
+#         return super().__new__(cls, name, bases, dct)
+#     def __init__(cls, name, bases, dct):
+#         print(f"Meta.__init__ called for {name}")
+#         super().__init__(name, bases, dct)
+
+# class Base: pass
+
+# class MyClass(Base, metaclass=Meta):
+#     x = 42
+#     person_name = "Suwarna Shukla"
+#     age = 22
+#     phone = "mi"
+#     def hello(self): pass
+
+# OUTPUT:
+#
+# Creating class: MyClass
+# Bases: (<class '__main__.Base'>,)
+# Attributes: ['__module__', '__qualname__', 'x', 'person_name', 'age', 'phone', 'hello']
+# Meta.__init__ called for MyClass
+# >>> 
+
+
+# TOOL CALLLING IN AGENTIC AI
+
+# >>> TOOL_REGISTRY = {}
+# >>> 
+# >>> class ToolMeta(type):
+# ...     def __init__(cls, name, bases, dct):
+# ...         if name != 'BaseTool':  # Don't register base
+# ...             TOOL_REGISTRY[name] = cls
+# ...         super().__init__(name, bases, dct)
+# ... 
+# >>> class BaseTool(metaclass=ToolMeta):
+# ...     pass
+# ... 
+# >>> class MyTool(BaseTool):
+# ...     pass
+# ... 
+# >>> class AnotherTool(BaseTool):
+# ...     pass
+# ... 
+# >>> print(TOOL_REGISTRY)
+# {'MyTool': <class '__main__.MyTool'>, 'AnotherTool': <class '__main__.AnotherTool'>}
 
 
 
+
+####FUNCTION CALLING USING TOOL CALLING:
+
+
+
+
+#=============================================================================================================================
+
+# ITERATOR:
+
+class Countdown:
+    def __init__(self, n): 
+        self.n = n  # Starting number
+    def __iter__(self): 
+        return self  # Returns the object itself as an iterator
+    def __next__(self):
+        if self.n == 0:
+            raise StopIteration  # Signals end of iteration
+        self.n -= 1
+        return self.n + 1  # Return current value
+
+#OUTPUT:
+
+# >>> c = Countdown(3)
+# >>> next(c)
+# 3
+# >>> next(c)
+# 2
+# >>> next(c)
+# 1
+
+# >>> list(Countdown(10))
+# [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]-----------> working itself with the help of iter and next
+
+
+# GENERATORS:
+# A generator is a simpler way to create iterators.
+
+# ✅ How to make a generator?
+# Use the yield keyword in a function.
+
+# Feature	              Iterator Class	                            Generator Function
+# Structure	       Class with __iter__, __next__	               Function with yield
+# Memory usage	      Manual control	                          Efficient (pause/resume)
+# Use case	        More control, complex state	                      Simpler, readable
+
+
+
+#=========================================================================================================================
