@@ -328,6 +328,32 @@ File Name = task-2-OOPs.py
 # 5
 
 
+# NOW SEE HOW TOOL DECORATOR IS MAKE INTERNALLY VIA LANGCHAIN:
+
+# tool_registry = {}---------------------> HERE ALL THE TOOLS ARE STORED.
+
+# def tool(func):
+#     func._is_tool = True------------------>HERE CHECKING IF A FUNCTION IS UNDER TOOL DECORATOR 
+#     return func
+
+# class ToolMeta(type):
+#     def __new__(cls, name, bases, dct):
+#         for attr, val in dct.items():
+#             if callable(val) and getattr(val, "_is_tool", False):----------------->IF val IS A FUNCTION AND IS IN TOOL DECORATOR THEN STORE IN tool_registory COLLECTION.
+#                 tool_registry[attr] = val
+#         return super().__new__(cls, name, bases, dct)
+
+# class MyTools(metaclass=ToolMeta):
+
+#     @tool
+#     def greet(self, name):
+#         return f"Hello, {name}"
+
+# tools = MyTools()
+# print(tool_registry['greet'](tools, "Suwarna"))  # Hello, Suwarna
+
+
+
 
 #TYPE-2: CLASS CREATION WITH type()
 # This type() function is used to check the type of the object but it is also a metaclass and used to 
@@ -457,3 +483,495 @@ class Countdown:
 
 
 #=========================================================================================================================
+
+# CONTEXT MANAGER:
+
+# A context manager is a Python construct that sets something up and tears it down — typically used to manage resources 
+# like files, database connections, locks, etc.
+# It’s most commonly used with the with statement.
+
+
+# CUSTOM CONTEXT MANAGER (CLASS-BASED)
+class MyContext:
+    def __enter__(self):
+        print("Entering")
+        return self
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print("Exiting")
+        if exc_type:
+            print(f"Error caught: {exc_type.__name__} - {exc_val}")
+        return True  # suppresses the error
+
+with MyContext():
+    print("Inside block")
+    1 / 0  # Causes ZeroDivisionError
+
+# OUTPUT:
+
+# Entering
+# Inside block
+# Exiting
+# Error caught: ZeroDivisionError - division by zero
+
+
+# def __exit__(self, exc_type, exc_val, exc_tb):
+#     ...
+
+# These parameters represent information about any exception that occurred inside the with block:
+
+# Parameter	Meaning
+# exc_type	The exception class/type (e.g., ZeroDivisionError)
+# exc_val	The exception instance/message (e.g., ZeroDivisionError('div by 0'))
+# exc_tb	The traceback object (info about where the error happened)
+
+
+
+# CONTEXT MANAGER USING @custommanager DECORATOR (FUNCTION BASED CUSTOM MANAGER):
+
+# The error is happening because you're doing division outside the context block, and you're not using yield, which is required for a function decorated with @contextmanager.
+
+# ❌ What's wrong in your code:
+
+# @contextmanager
+# def divide(num: int, dino: int):
+#     return num/dino  # ❌ Not using yield
+
+
+# >>> from contextlib import contextmanager
+# >>> 
+# >>> @contextmanager
+# ... def divide(num: int, dino: int):
+# ...     try:
+# ...         result = num / dino
+# ...         yield result
+# ...     except ZeroDivisionError as e:
+# ...         print("Division by zero is not allowed.")
+# ...         yield None
+# ... 
+# >>> 
+# >>> divide(10,0)----------------> HERE I AM JUST USING CONTEXT MANAGER OBJECT NOT THE CODE INSIDE THE CONTEXT MANAGER.
+# <contextlib._GeneratorContextManager object at 0x7f40f8ee9960>
+# >>> 
+# >>> 
+# >>> 
+# >>> with divide(10, 2) as result:-------> WITH IS REQUIRED TO USE THE CODE INSIDE THE CONTEXT MANAGER
+# ...     print("Result:", result)
+# ... 
+# Result: 5.0
+# >>> with divide(10, 0) as result:
+# ...     print("Result:", result)
+# ... 
+# Division by zero is not allowed.
+# Result: None
+
+
+
+#FOR ASYNC CONTEXTMANAGER: @asynccontextmanager
+#Used with async with for resources that require asynchronous setup and teardown.
+
+import asyncio
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def resource():
+    print("Connecting...")
+    await asyncio.sleep(10)
+    yield "Resource ready"
+    print("Disconnected.")
+
+async def main():
+    async with resource() as res:
+        print(res)
+
+asyncio.run(main())
+
+# >>> asyncio.run(main())
+# Connecting...
+# Resource ready
+# Disconnected.
+
+
+#=======================================================================================================================
+
+# CONCURRENCY AND PARALLELISM:------->[X --> not understood problem but little less important so leave for now]
+
+#            Is your task I/O-bound?
+#                       |
+#          Yes ----------------- No (CPU-bound)
+#           |                         |
+# Use threading or              Use multiprocessing or
+# ThreadPoolExecutor         ProcessPoolExecutor
+
+
+
+#THREADING:
+
+# BY THREADING MODULE:
+
+# >>> import threading, time
+# >>> 
+# >>> def worker():
+# ...     print("Start")
+# ...     time.sleep(1)
+# ...     print("Done")
+# ... 
+# >>> t1 = threading.Thread(target=worker)
+# >>> t2 = threading.Thread(target=worker)
+# >>> t1.start(); t2.start()
+# Start
+# Start
+# >>> t1.join(); t2.join()
+# Done
+# Done
+
+
+# BY HIGHER LEVEL API:
+
+from concurrent.futures import ThreadPoolExecutor #memory is shared by each thread
+import time
+
+def task(name):
+    print(f"{name} started")
+    time.sleep(2)
+    print(f"{name} finished")
+
+with ThreadPoolExecutor(max_workers=2) as executor:
+    executor.submit(task, "Thread-A")
+    executor.submit(task, "Thread-B")
+
+# ... 
+# Thread-A started
+# <Future at 0x7fa11ab28790 state=running>
+# Thread-B started
+# <Future at 0x7fa11a867df0 state=running>
+# Thread-A finished
+# Thread-B finished
+
+
+# MULTIPROCESSING
+
+# >>> import multiprocessing
+# >>> import time
+# >>> 
+# >>> def worker(num):
+# ...     print(f"Worker {num} started")
+# ...     time.sleep(2)
+# ...     print(f"Worker {num} finished")
+# ... 
+# >>> if __name__ == "__main__":
+# ...     p1 = multiprocessing.Process(target=worker, args=(1,))
+# ...     p2 = multiprocessing.Process(target=worker, args=(2,))
+# ...     
+# ...     p1.start()
+# ...     p2.start()
+# ...     
+# ...     p1.join()
+# ...     p2.join()
+# ... 
+# Worker 1 started
+# Worker 2 started
+
+# Worker 1 finished
+# Worker 2 finished
+# >>> 
+
+# BY HIGHER LEVEL API:
+
+from concurrent.futures import ProcessPoolExecutor  #each task have individual memory resorces they don't share.
+import time
+
+def square(n):
+    return n * n
+
+with ProcessPoolExecutor() as executor:
+    results = executor.map(square, [1, 2, 3, 4])
+    print(list(results))
+
+# ... 
+# [1, 4, 9, 16]
+# >>> 
+
+
+#==========================================================================================================================
+
+# ASYNCHRONOUS PROGRAMMING:
+
+# asyncio is used as a foundation for multiple Python asynchronous frameworks that provide high-performance network and 
+# web-servers, database connection libraries, distributed task queues, etc.
+
+
+'''
+Key Terms to know:
+
+1. Synchronous Programming: Sequential task execution; each task waits for the previous one to complete.-----------> Inefficient means 
+CPU's resources are unused when one task needs waiting
+
+2. Asynchronous Programming: Tasks can run independently of main loop; non-blocking operations enhance efficiency.-----------> Efficient and mostly used
+
+3. Concurrency: Managing multiple tasks simultaneously, often through interleaving; doesn't imply simultaneous execution.
+
+4. Parallel Programming: Executing multiple tasks simultaneously on different processors or cores to speed up computations.
+
+Relation to asyncio: [for ASYNCHRONOUS PROGRAMMING + CONCURRENT PROGRAMMING]
+
+Python's asyncio library is designed for writing concurrent code using the async and await syntax. 
+
+It enables asynchronous programming by allowing a single thread to manage multiple I/O-bound tasks efficiently. 
+
+While asyncio facilitates concurrency through asynchronous programming, it doesn't provide parallel execution for CPU-bound tasks. 
+
+For parallelism, Python offers the multiprocessing module, which allows tasks to run on multiple CPU cores.
+
+
+The asyncio package in Python is a library designed for writing concurrent code using the async and await syntax. It serves as the 
+foundation for building asynchronous frameworks that handle tasks such as network operations, web servers, and database connections. 
+
+Central to asyncio is the event loop, which orchestrates the execution of asynchronous tasks, callbacks, and handles I/O events, 
+ensuring efficient task management.
+
+
+__init__.py file in the asyncio package orchestrates the importation of various submodules and consolidates their public interfaces, 
+providing a cohesive and unified API for asynchronous programming in Python.
+
+So in short Asynchronous programming where you can do CPU bound operation while you are waiting for I/O operation.
+'''
+
+'''
+Fundamentals of Asyncio Package:
+
+1. Event Loop: Core that manages distributed tasks.It have the work to execute which is ready to execute and if some process is waiting 
+               for something like data or something that event loop execute it when that function is ready for it.
+
+2. Coroutines: Just the async function is the coroutine and the simple function calling is coroutine object and running the coroutine 
+               that is the async function is called running the evnt loop.
+
+        >>> import asyncio
+        >>> 
+        >>> async def main(): #----------------> coroutine
+        ...     print("Starting coroutine")
+        ... 
+        >>> main() #--------------> simply running asynchronous function is coroutine object
+        <coroutine object main at 0x7f7a7ff0ac00>
+        >>> 
+        >>> asyncio.run(main()) #----------------> running the coroutine object using asyncio is called running of event loop.
+        Starting coroutine
+        >>> 
+
+    Now you might be thinking that the why we need asyncio.run() to run the coroutine object the problem is that the function need to be waited 
+    for the data or something and simply running main() won't wait can will leads to error so we need this run() function.
+
+        >>> import asyncio 
+        >>> 
+        >>> async def person(name):
+        ...     print("Fetching data...")
+        ...     await asyncio.sleep(2)
+        ...     print("Data Fetched")
+        ...     return {"name": name}
+        ... 
+        >>> async def main():------------------------------> this is the main coroutine 
+        ...     print("Start coroutine")
+        ...     detail = person("Suwarna Shukla")
+        ...     result = await detail--------------------------> a coroutine does not start executing until await is called=======> so it will run 74, 75, and the 76th line this person(name) function is called so without this sync person function is not called.
+        ...     print(f"Recieve Result: {result}")
+        ...     print("End of coroutine")
+        ... 
+        >>> asyncio.run(main())------------------------------> therefore we use main here 
+        Start coroutine
+        Fetching data...
+        Data Fetched
+        Recieve Result: {'name': 'Suwarna Shukla'}
+        End of coroutine
+        >>> 
+
+       Multiple tasks are created but they are not runned concorrently so they are just running synchronously 
+       so we did not got the performance efficiency both task is taking sepearet 2-2 seconds.
+
+        >>> async def main():
+        ...     print("Start coroutine")
+        ...     detail1 = person("Suwarna Shukla")---------------->TASK-1
+        ...     detail2 = person("Sonal")------------------------->TASK-2
+        ...     result1 = await detail1
+        ...     result2 = await detail2
+        ...     print(f"Recieve Result: {result1}")
+        ...     print(f"Recieve Result: {result2}")
+        ...     print("End of coroutine")
+        ... 
+        >>> asyncio.run(main())
+        Start coroutine
+        Fetching data...
+        Data Fetched
+        Fetching data...
+        Data Fetched
+        Recieve Result: {'name': 'Suwarna Shukla'}
+        Recieve Result: {'name': 'Sonal'}
+        End of coroutine
+
+        
+'''
+
+'''
+3. Task Creation: Task are created to run the coroutines concurrently.
+
+'''
+# async def person(name):
+#     print("Fetching data...")
+#     await asyncio.sleep(2)
+#     print("Data Fetched")
+#     return {"name": name}
+# async def main():
+#     print("Start coroutine")
+#     detail1 = person("Suwarna Shukla")
+#     detail2 = person("Sonal")
+#     result1 = await detail1
+#     result2 = await detail2
+#     print(f"Recieve Result: {result1}")
+#     print(f"Recieve Result: {result2}")
+#     print("End of coroutine")
+
+
+import asyncio
+from datetime import datetime
+
+async def person(name):
+    print("Fetching data")
+    await asyncio.sleep(2)
+    print("Data Fetched")
+    return {"name": name}
+
+
+# async def main(): -----------------> this show as how task created inidividually we can create all at onces in single line via gather
+#     print("Start coroutine")
+#     # If done this way then concurrency won't be followed leads to synchronous programming to overcome this we need to make task
+#     # detail1 = person("Suwarna Shukla")
+#     # detail2 = person("Sonal")
+#     # detail3 = person("tuntun")
+#     current_time = datetime.now().time()
+#     print(current_time)
+#     detail1 = asyncio.create_task(person("Suwarna Shukla"))#------->used create concurrent task and if you create later then it will work like synchronous task
+#     detail2 = asyncio.create_task(person("Sonal"))
+#     detail3 = asyncio.create_task(person("tuntun"))
+#     result1 = await detail1
+#     result2 = await detail2
+#     result3 = await detail3 
+#     current_time1 = datetime.now().time()
+#     print(result1, result2, result3)
+#     print(current_time1)
+
+# asyncio.run(main())
+
+#Time Difference: 0:00:02.002712--------------> See here concurrency works here in 2 sec all the 3 tasks occured in between when one task need to wait for 2 sec.
+
+
+'''
+async def main():
+    print("Start coroutine")
+    current_time = datetime.now().time()
+    print(current_time)
+    detail1 = asyncio.create_task(person("Suwarna Shukla"))
+    detail2 = asyncio.create_task(person("Sonal"))
+    result1 = await detail1
+    result2 = await detail2
+    detail3 = asyncio.create_task(person("tuntun"))-----------------> This now work as synchronous task as both the task created and executed then this task3 is 
+                                                                      created and then executed via await
+    result3 = await detail3 
+    current_time1 = datetime.now().time()
+    print(result1, result2, result3)
+    print(current_time1)
+
+'''
+
+# async def main():
+#     print("Start coroutine")
+#     task = await asyncio.gather(person("Sona"),person("Mona"), person("Dona"))#-------> This gather is used to create the task and also execute it also 
+#                                                                                         #so create_task and await task both happen in this function itself.
+#     #result = await task
+#     print(task)
+#     print("Coroutine completed")
+
+# asyncio.run(main())
+
+# This is prone to errors as if one of the task fails then all will fail and error handling is not good so we have TASK GROUP 
+# So, this TaskGroup() cancels all the other task if one task fails so that it don't make the system in bad state.
+
+# async def main():
+#     tasks = []
+#     async with asyncio.TaskGroup() as tg:#--------------> Available in 3.11 not in 3.10
+#         for n in enumerate(["Suwarna", "Sonal", "Tuntun"]):
+#             task = tg.create_task(person(n))
+#             tasks.append(task)
+
+#         results = [task.result() for task in tasks]
+#         for result in results:
+#             print(f"Recieved result: {result}")
+
+
+# asyncio.run(main())
+
+
+'''
+4. FUTURES: It is a promise of the future result.
+
+asyncio.isfuture(obj)
+
+Return True if obj is either of:
+-->an instance of asyncio.Future,
+-->an instance of asyncio.Task,
+-->a Future-like object with a _asyncio_future_blocking attribute.
+
+'''
+import asyncio 
+
+async def set_future_result(future, value):
+    print(f"Future had bydefault value: {value}")
+    await asyncio.sleep(2)
+    value = "Hello !!! actually the message is complete this topic end of the day."
+    future.set_result(value)
+    print(f"Set the future's result to: {value}")
+
+async def main():
+    loop = asyncio.get_running_loop() # Get the event loop----can be called from the coroutine ony.
+    future = loop.create_future() #Create a future object
+    asyncio.create_task(set_future_result(future, "Future result is ready"))
+    result = await future # wait for the future to get a result
+    print(f"Recieve the future's result: {result}")
+
+asyncio.run(main())
+
+# import asyncio -------------> This is how we work without future so we can set the value only when the task is complete so we should use future which help to give the placeholder.
+
+# async def set_result():
+#     await asyncio.sleep(2)
+#     print("Set the result: Future result is ready")
+#     return "Future result is ready"
+
+# async def main():
+#     task = asyncio.create_task(set_result())  # Start the task
+#     result = await task  # Wait for task to complete
+#     print(f"Received the result: {result}")
+
+# asyncio.run(main())
+
+
+'''
+python-advance-py3.10bluebash@bluebash-ThinkPad-E14-Gen-3:~/Documents/python_advance$ python3 asynchronous_programming.py
+Future had bydefault value: Future result is ready
+Set the future's result to: Hello !!! actually the message is complete this topic end of the day.
+Recieve the future's result: Hello !!! actually the message is complete this topic end of the day.
+
+
+
+Aspect	                                      Using Future	                                         Without Future (task.result())
+Purpose	            Acts as a placeholder for a value that arrives later.	                    Just waits for the task to finish and returns the result.
+When Used?	        When a function does not return a value directly but will set it later.	    When a function can return a value normally.
+Control	            future.set_result(value) can be called whenever needed.	                    The result is available only when the task finishes.
+Blocking?	        await future waits until the future gets a result.	                        await task simply waits for task completion.
+'''
+
+'''
+SYNCHRONOUS: code written normally (without asyncio, threads, or processes) is synchronous. So we normally do synchronous programming
+
+'''
+
+
+
+import asyncio
